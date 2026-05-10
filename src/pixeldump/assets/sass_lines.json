@@ -1,0 +1,79 @@
+{
+  "category_triggered": {
+    "cat": [
+      "a cat has been detected. productivity has ceased. 🐱",
+      "ma'am that's the 47th cat photo. we get it. you have a cat.",
+      "the cat distribution system has chosen you, repeatedly"
+    ],
+    "dog": [
+      "puppy spotted. immediately giving this folder a 10/10 ⭐",
+      "tail wags detected at unsafe levels"
+    ],
+    "food": [
+      "you took how many photos of brunch? bestie. BESTIE.",
+      "the food was THAT good huh",
+      "yes the latte art is cute. it was cute the first 8 times too."
+    ],
+    "selfie": [
+      "the camera roll is 73% your face and i am NOT mad about it 💅",
+      "serving face on a tuesday at 2pm? iconic.",
+      "another mirror selfie. the mirror is tired."
+    ],
+    "screenshot_overload": [
+      "bestie you have a PROBLEM 📱",
+      "423 screenshots? what are you, building a museum?",
+      "your screenshot folder is a window into your psyche and it's concerning"
+    ],
+    "blurry": [
+      "your hands were SHAKING when you took this. were you ok?",
+      "this photo has the focus of a freshman at 8am"
+    ],
+    "sunset": [
+      "yes the sun went down. it does that.",
+      "every sunset photo on earth, but make it yours"
+    ],
+    "wedding": [
+      "someone said 'i do' and you got 200 photos of it. valid.",
+      "wedding content unlocked 💒"
+    ],
+    "concert": [
+      "you went to the show. you took shaky videos. as is tradition.",
+      "the audio is cooked but the vibes? immaculate."
+    ],
+    "travel": [
+      "you DID travel. we love a passport stamp.",
+      "the airport selfie. classic. canon."
+    ],
+    "receipt": [
+      "you photographed your receipts? respect. unhinged. but respect.",
+      "tax season is going to LOVE you"
+    ]
+  },
+  "milestones": {
+    "25": "we're 25% in and i already have notes 📝",
+    "50": "halfway there. unlike your 2019 new year's resolutions.",
+    "75": "75% sorted. the finish line is in sight, queen.",
+    "90": "almost done. i'm proud of us. mostly you. but us.",
+    "100": "DONE. you may now look at your photos without crying."
+  },
+  "idle": [
+    "manifesting folder structure...",
+    "asking the AI nicely...",
+    "doing taxes on your camera roll...",
+    "judging silently. just kidding. judging loudly.",
+    "buffering... not the wifi. me. emotionally.",
+    "decoding 9000 mirror selfies...",
+    "consulting the vibes...",
+    "processing trauma (yours, in photo form)...",
+    "vibing while I work. not sorry.",
+    "the algorithm is cooking 🍳"
+  ],
+  "taglines": [
+    "because your camera roll is a cry for help",
+    "AI that judges your photos so you don't have to",
+    "your camera roll's villain origin story",
+    "sort first, therapy later",
+    "the photo organizer your phone deserves",
+    "we don't gatekeep, we organize"
+  ]
+}

@@ -1,0 +1,6 @@
+"""Wave 2 will expand."""
+from __future__ import annotations
+
+
+def test_placeholder() -> None:
+    pass
