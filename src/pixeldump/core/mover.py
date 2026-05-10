@@ -21,10 +21,12 @@ from pixeldump.core.types import (
 
 
 def _is_review(folder_name: FolderName) -> bool:
+    """Return True if the folder is routed to the _review tree."""
     return folder_name.date_prefix.startswith("_review")
 
 
 def _destination_for(root: Path, folder_name: FolderName, source_name: str) -> Path:
+    """Build the full destination path for a photo given its folder name."""
     if _is_review(folder_name):
         # _review/<bucket>/<file>
         return root / "_review" / folder_name.name / source_name
