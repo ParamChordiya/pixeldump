@@ -26,7 +26,7 @@ from pathlib import Path
 from rich.console import Console
 from rich.table import Table
 
-from pixeldump.core.classifier import classify_clusters, sample_photos_for_cluster
+from pixeldump.core.classifier import classify_clusters
 from pixeldump.core.clusterer import cluster
 from pixeldump.core.scanner import scan
 from pixeldump.core.types import (
@@ -39,7 +39,6 @@ from pixeldump.core.types import (
     PhotoMetadata,
 )
 from pixeldump.providers.base import VisionProvider
-
 
 # ---------------------------------------------------------------------------
 # Custom provider implementation
