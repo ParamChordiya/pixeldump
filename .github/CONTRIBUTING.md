@@ -7,7 +7,7 @@ any stage.
 ## Getting set up
 
 ```bash
-git clone https://github.com/pixeldump/pixeldump.git
+git clone https://github.com/ParamChordiya/pixeldump.git
 cd pixeldump
 python -m venv .venv
 source .venv/bin/activate
