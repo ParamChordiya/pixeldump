@@ -1,0 +1,16 @@
+# CODEOWNERS
+#
+# Each line maps a path pattern to one or more GitHub users/teams.
+# The last matching rule wins. Rules are evaluated top-to-bottom.
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default — every file not matched below
+* @ParamChordiya
+
+# Frozen type contracts — changes need extra scrutiny
+src/pixeldump/core/types.py     @ParamChordiya
+src/pixeldump/providers/        @ParamChordiya
+
+# CI, release, and repo configuration
+.github/                        @ParamChordiya
+pyproject.toml                  @ParamChordiya

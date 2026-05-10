@@ -9,7 +9,7 @@ description = "Gen-Z-flavored AI photo organizer CLI/TUI"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
-authors = [{ name = "PixelDump contributors" }]
+authors = [{ name = "Param Chordiya", email = "param1111.chordiya@gmail.com" }]
 keywords = ["photos", "organizer", "ai", "cli", "tui", "exif"]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -52,9 +52,10 @@ dev = [
 pixeldump = "pixeldump.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/pixeldump/pixeldump"
-Repository = "https://github.com/pixeldump/pixeldump"
-Issues = "https://github.com/pixeldump/pixeldump/issues"
+Homepage = "https://github.com/ParamChordiya/pixeldump"
+Repository = "https://github.com/ParamChordiya/pixeldump"
+Issues = "https://github.com/ParamChordiya/pixeldump/issues"
+Changelog = "https://github.com/ParamChordiya/pixeldump/blob/main/CHANGELOG.md"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/pixeldump"]
