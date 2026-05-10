@@ -25,6 +25,7 @@ _TAG_MODEL = 272
 
 
 def _parse_exif_datetime(value: str) -> datetime | None:
+    """Parse an EXIF datetime string into a datetime, or return None."""
     try:
         return datetime.strptime(value.strip(), "%Y:%m:%d %H:%M:%S")
     except (ValueError, AttributeError):
@@ -32,6 +33,7 @@ def _parse_exif_datetime(value: str) -> datetime | None:
 
 
 def _read_date_with_exifread(path: Path) -> datetime | None:
+    """Extract DateTimeOriginal via exifread (used for RAW formats)."""
     try:
         with open(path, "rb") as f:
             tags = exifread.process_file(
@@ -73,6 +75,7 @@ def read_date_taken(path: Path) -> datetime | None:
 
 
 def _dms_to_decimal(dms: Any, ref: str) -> float:
+    """Convert degrees/minutes/seconds + hemisphere ref to a signed decimal degree."""
     d, m, s = (float(x) for x in dms)
     decimal = d + m / 60.0 + s / 3600.0
     if ref in ("S", "W"):
