@@ -18,9 +18,13 @@ from pixeldump.core.types import (
     PhotoInput,
     PhotoMetadata,
 )
-from pixeldump.providers._prompts import build_cluster_metadata_context, _time_of_day
+from pixeldump.providers._prompts import _time_of_day, build_cluster_metadata_context
 from pixeldump.providers.claude import ClaudeProvider
-from pixeldump.providers.claude_code import ClaudeCodeProvider, _parse_classification, _sanitize_name
+from pixeldump.providers.claude_code import (
+    ClaudeCodeProvider,
+    _parse_classification,
+    _sanitize_name,
+)
 from pixeldump.providers.ollama import OllamaProvider
 
 # ---------------------------------------------------------------------------
@@ -362,29 +366,35 @@ def test_claude_code_unavailable_when_cli_missing() -> None:
 
 
 def test_claude_code_unavailable_when_version_fails() -> None:
-    with patch("pixeldump.providers.claude_code.shutil.which", return_value="/usr/bin/claude"):
-        with patch("pixeldump.providers.claude_code.subprocess.run") as mock_run:
-            mock_run.return_value = MagicMock(returncode=1)
-            provider = ClaudeCodeProvider()
-            assert provider.is_available() is False
+    with (
+        patch("pixeldump.providers.claude_code.shutil.which", return_value="/usr/bin/claude"),
+        patch("pixeldump.providers.claude_code.subprocess.run") as mock_run,
+    ):
+        mock_run.return_value = MagicMock(returncode=1)
+        provider = ClaudeCodeProvider()
+        assert provider.is_available() is False
 
 
 def test_claude_code_available_when_version_succeeds() -> None:
-    with patch("pixeldump.providers.claude_code.shutil.which", return_value="/usr/bin/claude"):
-        with patch("pixeldump.providers.claude_code.subprocess.run") as mock_run:
-            mock_run.return_value = MagicMock(returncode=0)
-            provider = ClaudeCodeProvider()
-            assert provider.is_available() is True
+    with (
+        patch("pixeldump.providers.claude_code.shutil.which", return_value="/usr/bin/claude"),
+        patch("pixeldump.providers.claude_code.subprocess.run") as mock_run,
+    ):
+        mock_run.return_value = MagicMock(returncode=0)
+        provider = ClaudeCodeProvider()
+        assert provider.is_available() is True
 
 
 def test_claude_code_caches_availability() -> None:
-    with patch("pixeldump.providers.claude_code.shutil.which", return_value="/usr/bin/claude"):
-        with patch("pixeldump.providers.claude_code.subprocess.run") as mock_run:
-            mock_run.return_value = MagicMock(returncode=0)
-            provider = ClaudeCodeProvider()
-            provider.is_available()
-            provider.is_available()
-            assert mock_run.call_count == 1
+    with (
+        patch("pixeldump.providers.claude_code.shutil.which", return_value="/usr/bin/claude"),
+        patch("pixeldump.providers.claude_code.subprocess.run") as mock_run,
+    ):
+        mock_run.return_value = MagicMock(returncode=0)
+        provider = ClaudeCodeProvider()
+        provider.is_available()
+        provider.is_available()
+        assert mock_run.call_count == 1
 
 
 def test_claude_code_call_raises_when_cli_none() -> None:

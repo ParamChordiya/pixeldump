@@ -471,32 +471,30 @@ def setup() -> None:
     if default_provider == "claude-code":
         click.echo("claude-code: no credentials needed. ✓")
 
-    if default_provider in {"claude", "auto"} and not claude_ok:
-        if click.confirm("configure anthropic API key?", default=True):
-            new_key = click.prompt(
-                "anthropic API key", hide_input=True, default="", show_default=False
-            )
-            if new_key:
-                cp = ClaudeProvider(api_key=new_key)
-                if cp.is_available():
-                    cfg["claude_api_key"] = new_key
-                    click.echo("claude: ok.")
-                else:
-                    click.echo("claude: not reachable; key NOT saved.", err=True)
+    if default_provider in {"claude", "auto"} and not claude_ok and click.confirm("configure anthropic API key?", default=True):
+        new_key = click.prompt(
+            "anthropic API key", hide_input=True, default="", show_default=False
+        )
+        if new_key:
+            cp = ClaudeProvider(api_key=new_key)
+            if cp.is_available():
+                cfg["claude_api_key"] = new_key
+                click.echo("claude: ok.")
             else:
-                click.echo("claude: skipped.")
+                click.echo("claude: not reachable; key NOT saved.", err=True)
+        else:
+            click.echo("claude: skipped.")
 
-    if default_provider in {"ollama", "auto"} and not ollama_ok:
-        if click.confirm("configure ollama?", default=False):
-            host = click.prompt("ollama host", default="http://localhost:11434")
-            model = click.prompt("ollama model", default="gemma3")
-            op2 = OllamaProvider(host=host, model=model)
-            if op2.is_available():
-                cfg["ollama_host"] = host
-                cfg["ollama_model"] = model
-                click.echo("ollama: ok.")
-            else:
-                click.echo("ollama: not reachable; settings NOT saved.", err=True)
+    if default_provider in {"ollama", "auto"} and not ollama_ok and click.confirm("configure ollama?", default=False):
+        host = click.prompt("ollama host", default="http://localhost:11434")
+        model = click.prompt("ollama model", default="gemma3")
+        op2 = OllamaProvider(host=host, model=model)
+        if op2.is_available():
+            cfg["ollama_host"] = host
+            cfg["ollama_model"] = model
+            click.echo("ollama: ok.")
+        else:
+            click.echo("ollama: not reachable; settings NOT saved.", err=True)
 
     save_config(cfg)
     click.echo(f"\nsaved. default provider: {default_provider}.")

@@ -214,10 +214,7 @@ def build_cluster_metadata_context(photos: list[PhotoInput]) -> str:
     for i, photo in enumerate(photos, 1):
         m = photo.metadata
         camera = m.camera_model or "none"
-        if m.gps:
-            gps_str = f"{m.gps.lat:.5f}, {m.gps.lon:.5f}"
-        else:
-            gps_str = "none"
+        gps_str = f"{m.gps.lat:.5f}, {m.gps.lon:.5f}" if m.gps else "none"
         if m.date_taken:
             tod = _time_of_day(m.date_taken.hour)
             date_str = f"{m.date_taken.strftime('%Y-%m-%d %H:%M')} ({tod})"
