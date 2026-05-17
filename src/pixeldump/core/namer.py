@@ -18,6 +18,59 @@ _UNTITLED = "untitled_event"
 _ALLOWED_RE = re.compile(r"[^a-z0-9_]")
 _UNDERSCORE_RUN_RE = re.compile(r"_+")
 _WHITESPACE_RE = re.compile(r"\s+")
+
+# Maps document subcategory → folder name under {year}/.
+# All document clusters route here without calling the LLM for a name —
+# the typed folder IS the organisation; the file itself is the identifier.
+_DOCUMENT_ROUTES: dict[str, str] = {
+    # Screenshots
+    "screenshot": "screenshots",
+    "screenshot_app": "screenshots_apps",
+    "screenshot_web": "screenshots_web",
+    "screenshot_conversation": "screenshots_conversations",
+    "screenshot_social": "screenshots_social",
+    "screenshot_meme": "screenshots_memes",
+    "screenshot_map": "screenshots_maps",
+    # Financial
+    "receipt": "documents_receipts",
+    "bill": "documents_bills",
+    "invoice": "documents_bills",
+    "bank_statement": "documents_financial",
+    "credit_card_statement": "documents_financial",
+    "paycheck": "documents_financial",
+    "tax_doc": "documents_financial",
+    # Identity
+    "id_card": "documents_ids",
+    "passport": "documents_ids",
+    "drivers_license": "documents_ids",
+    "insurance_card": "documents_ids",
+    "visa": "documents_ids",
+    # Travel documents
+    "boarding_pass": "documents_travel",
+    "hotel_confirmation": "documents_travel",
+    "event_ticket": "documents_travel",
+    "itinerary": "documents_travel",
+    # Medical
+    "prescription": "documents_medical",
+    "medical_doc": "documents_medical",
+    "lab_result": "documents_medical",
+    "vaccination_record": "documents_medical",
+    # Legal
+    "contract": "documents_legal",
+    "lease": "documents_legal",
+    "certificate": "documents_legal",
+    "legal_doc": "documents_legal",
+    # Miscellaneous
+    "whiteboard": "documents_misc",
+    "menu": "documents_misc",
+    "business_card": "documents_misc",
+    "qr_code": "documents_misc",
+    "handwritten_note": "documents_misc",
+    "package_label": "documents_misc",
+    "gift_card": "documents_misc",
+    "form": "documents_misc",
+    "scanned_doc": "documents_misc",
+}
 _MAX_NAME_LEN = 40
 
 
@@ -65,13 +118,12 @@ def name_cluster(
     if classification.confidence < 0.5:
         return FolderName(name="low_confidence", date_prefix="_review")
 
-    # Special: screenshots land in {year}/screenshots/.
-    if (
-        classification.category == "documents"
-        and classification.subcategory == "screenshot"
-    ):
+    # Documents: route to a typed subfolder — no LLM naming needed.
+    if classification.category == "documents":
+        sub = classification.subcategory or "screenshot"
+        folder = _DOCUMENT_ROUTES.get(sub, "documents_misc")
         return FolderName(
-            name="screenshots",
+            name=folder,
             date_prefix=f"{cluster.date_start.year:04d}",
         )
 

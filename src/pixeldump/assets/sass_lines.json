@@ -24,6 +24,21 @@
       "423 screenshots? what are you, building a museum?",
       "your screenshot folder is a window into your psyche and it's concerning"
     ],
+    "screenshot_conversation": [
+      "receipts. you keep the receipts. noted and respected.",
+      "the number of conversations you screenshotted is giving evidence board",
+      "screenshot the texts, delete the person. a classic strategy."
+    ],
+    "screenshot_meme": [
+      "you are a meme hoarder and this is a safe space",
+      "the meme collection is extensive. the therapy bill will be too.",
+      "curating chaos one screenshot at a time. respect."
+    ],
+    "screenshot_social": [
+      "saving strangers' posts for motivation? we love a vision board era.",
+      "parasocially living through other people's highlight reels. valid.",
+      "the amount of saved posts you'll never revisit is deeply relatable"
+    ],
     "blurry": [
       "your hands were SHAKING when you took this. were you ok?",
       "this photo has the focus of a freshman at 8am"
@@ -47,6 +62,68 @@
     "receipt": [
       "you photographed your receipts? respect. unhinged. but respect.",
       "tax season is going to LOVE you"
+    ],
+    "bill": [
+      "you kept your bills? financially responsible or in denial — no in between.",
+      "a utility bill in the camera roll. the villain origin story continues.",
+      "photographing your bills won't make them smaller but we respect the documentation"
+    ],
+    "boarding_pass": [
+      "jetsetter energy detected. the sky is NOT the limit for you.",
+      "a boarding pass in the camera roll means you actually left the house. growth.",
+      "you kept the boarding pass. the trip was real. it happened."
+    ],
+    "prescription": [
+      "prescriptions in the camera roll. we respect the organisation, not the vibe.",
+      "keeping your medical docs in your photos? chaotic but functional.",
+      "the pharmacy knows your name and so do we now"
+    ],
+    "medical_doc": [
+      "medical paperwork in the camera roll — you are doing your adulting. we see you.",
+      "lab results and doctor's notes. staying on top of your health era.",
+      "the hypochondria is organised, at least"
+    ],
+    "lab_result": [
+      "blood work in the camera roll. we're not your doctor but we are concerned.",
+      "keeping your lab results? either very organised or very anxious. both valid."
+    ],
+    "id_card": [
+      "IDs in the camera roll. pray these never leak.",
+      "storing your ID here? chaotic neutral at best. please use a password manager.",
+      "the government issued that. and now it lives in your camera roll. interesting choice."
+    ],
+    "passport": [
+      "passport photo in the camera roll. global citizen behaviour.",
+      "storing your passport here is either genius or a disaster waiting to happen"
+    ],
+    "whiteboard": [
+      "you photographed a whiteboard. the meeting was NOT worth it.",
+      "a whiteboard shot. the ideas were too big for the notes app apparently.",
+      "the whiteboard photos never get revisited but sure, let's keep them"
+    ],
+    "gym": [
+      "gym selfies. the gains are real and you want EVERYONE to know.",
+      "you went to the gym AND documented it. the accountability era is real.",
+      "the gym content is giving main character. we support this arc."
+    ],
+    "workout": [
+      "workout content detected. the dedication is immaculate.",
+      "you documented the suffering. that's called commitment.",
+      "the 6am workout selfie. we didn't ask but we're proud."
+    ],
+    "progress_photo": [
+      "progress photos? the commitment is unmatched. document the glow-up.",
+      "tracking the transformation. the camera roll is your accountability partner.",
+      "progress photos hit different when you stack them. future you will thank present you."
+    ],
+    "before_after": [
+      "before and after energy. the glow-up documentation is very organised.",
+      "the transformation is documented. the algorithm would be obsessed."
+    ],
+    "meal_prep": [
+      "meal prep photos. you are that person and we respect it deeply.",
+      "the tupperware lineup is giving nutritional discipline. we're inspired.",
+      "meal prep content. the chaos is organised into containers."
     ]
   },
   "milestones": {
@@ -66,14 +143,18 @@
     "consulting the vibes...",
     "processing trauma (yours, in photo form)...",
     "vibing while I work. not sorry.",
-    "the algorithm is cooking 🍳"
+    "the algorithm is cooking 🍳",
+    "routing your bills to financial. you're welcome.",
+    "separating the screenshots from the memories. there are so many screenshots.",
+    "filing your medical docs. no we will not comment on the lab results.",
+    "detecting memes. cataloguing chaos. this is fine."
   ],
   "taglines": [
     "because your camera roll is a cry for help",
     "AI that judges your photos so you don't have to",
     "your camera roll's villain origin story",
     "sort first, therapy later",
-    "the photo organizer your phone deserves",
-    "we don't gatekeep, we organize"
+    "the photo organiser your phone deserves",
+    "we don't gatekeep, we organise"
   ]
 }
