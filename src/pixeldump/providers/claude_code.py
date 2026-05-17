@@ -96,10 +96,12 @@ class ClaudeCodeProvider(VisionProvider):
         mode: NamingMode,
     ) -> str:
         fallback = f"{category}_event"
+        sampled = photos[:3]
         with tempfile.TemporaryDirectory(prefix="pixeldump_") as tmpdir:
-            image_paths = _write_thumbnails(Path(tmpdir), photos[:3])
+            image_paths = _write_thumbnails(Path(tmpdir), sampled)
+            meta_ctx = build_cluster_metadata_context(sampled)
             user_msg = (
-                build_name_prompt(category, mode)
+                build_name_prompt(category, mode, meta_ctx)
                 + "\n\nImage files:\n"
                 + "\n".join(f"- {p}" for p in image_paths)
             )

@@ -160,14 +160,16 @@ class OllamaProvider(VisionProvider):
         mode: NamingMode,
     ) -> str:
         fallback = f"{category}_event"
-        images = [photo.thumbnail_bytes for photo in photos[:3]]
+        sampled = photos[:3]
+        images = [photo.thumbnail_bytes for photo in sampled]
+        meta_ctx = build_cluster_metadata_context(sampled)
         try:
             resp = self._client.chat(
                 model=self.model,
                 messages=[
                     {
                         "role": "user",
-                        "content": build_name_prompt(category, mode),
+                        "content": build_name_prompt(category, mode, meta_ctx),
                         "images": images,
                     },
                 ],

@@ -214,7 +214,8 @@ class ClaudeProvider(VisionProvider):
                     },
                 }
             )
-        content_blocks.append({"type": "text", "text": build_name_prompt(category, mode)})
+        meta_ctx = build_cluster_metadata_context(photos[:3])
+        content_blocks.append({"type": "text", "text": build_name_prompt(category, mode, meta_ctx)})
         try:
             resp = self._call_with_retry(
                 lambda: client.messages.create(

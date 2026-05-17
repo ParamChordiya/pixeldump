@@ -9,20 +9,43 @@ import json
 from dataclasses import asdict
 
 from pixeldump.core.taxonomy import ALL_CATEGORIES
-from pixeldump.core.types import LibraryStats, NamingMode
+from pixeldump.core.types import LibraryStats, NamingMode, PhotoInput
 
 CLASSIFY_SYSTEM_PROMPT: str = (
     "You are a vision classifier for a personal photo organizer. "
     "All photos supplied come from the same time-clustered event. "
-    "You will receive METADATA for each photo AND the thumbnail images. "
-    "Always read the metadata first — it is more reliable than visual appearance alone.\n\n"
-    "METADATA RULES (follow strictly, they override visual guesses):\n"
-    "  • camera field is set (e.g. 'Apple iPhone 15 Pro')  →  this IS a camera photo, "
-    "NEVER classify as any screenshot subcategory\n"
-    "  • gps = yes  →  this IS a camera photo, NEVER classify as any screenshot subcategory\n"
-    "  • filename contains 'screenshot' or 'Screen Shot'  →  IS a screenshot\n"
-    "  • filename pattern IMG_XXXX / DSC_XXXX / DCIM  →  camera photo\n"
-    "  • camera = none AND gps = no  →  visuals may be a screenshot; inspect carefully\n\n"
+    "You will receive METADATA and thumbnail images. "
+    "Always read the metadata block first — it carries hard evidence that visuals alone cannot provide.\n\n"
+
+    "METADATA SIGNALS — apply these to ALL classification decisions, not just screenshots:\n\n"
+
+    "  GPS coordinates:\n"
+    "    • present → this is a camera photo (never a screenshot or scanned doc)\n"
+    "    • use the coordinates with your geography knowledge to identify the country/city/region\n"
+    "    • coordinates far from home / in another country → strongly favour travel or international\n"
+    "    • known landmark / national-park coordinates → nature, hiking, or travel\n"
+    "    • city-centre coordinates + evening time → social, concert, date_night, or city_break\n\n"
+
+    "  Time of day (from date field):\n"
+    "    • 05:00–08:00 (early morning) → running, gym, hiking, nature sunrise\n"
+    "    • 08:00–12:00 (morning)       → brunch, travel sightseeing, work_event\n"
+    "    • 12:00–17:00 (afternoon)     → travel, outdoor social, everyday\n"
+    "    • 17:00–21:00 (evening)       → dinner_party, happy_hour, date_night, concert\n"
+    "    • 21:00–03:00 (night)         → concert, club_night, party, festival\n\n"
+
+    "  Cluster time span (from earliest to latest date):\n"
+    "    • multi-day (2+ days)  → travel, camping, ski_trip, festival, wedding\n"
+    "    • single day / hours   → local event, everyday, social, work_event\n\n"
+
+    "  Camera model:\n"
+    "    • set (any value)               → real camera photo; NEVER classify as screenshot\n"
+    "    • Sony / Canon / Nikon / Fuji   → likely creative, professional, or travel\n"
+    "    • GoPro / DJI                   → likely action sport, travel, or adventure\n"
+    "    • iPhone / Samsung / Pixel      → everyday, social, travel — check other signals\n"
+    "    • none                          → possible screenshot/document; use visual cues\n\n"
+
+    "  GPS = none AND camera = none → could be a screenshot or scanned document; inspect visuals carefully\n\n"
+
     "Classify the event into one PRIMARY CATEGORY and the most specific SUBCATEGORY.\n\n"
 
     "PRIMARY CATEGORIES (pick exactly one):\n"
@@ -134,39 +157,109 @@ _MODE_INSTRUCTIONS: dict[NamingMode, str] = {
 }
 
 
-def build_name_prompt(category: str, mode: NamingMode) -> str:
-    """Return the user prompt for `name_event`. Constrains output to a bare folder name."""
+def build_name_prompt(
+    category: str,
+    mode: NamingMode,
+    metadata_context: str = "",
+) -> str:
+    """Return the user prompt for `name_event`. Constrains output to a bare folder name.
+
+    Pass ``metadata_context`` (from ``build_cluster_metadata_context``) to give the
+    model GPS location, time-of-day, and camera context when naming — so folders like
+    "tokyo_trip" or "paris_evening_walk" emerge naturally from coordinates.
+    """
     style = _MODE_INSTRUCTIONS.get(mode, _MODE_INSTRUCTIONS[NamingMode.CORPORATE])
+    meta_section = f"{metadata_context}\n\n" if metadata_context else ""
     return (
-        "Look at these photos and generate a single descriptive folder name for this event.\n"
-        f"Category hint: {category}\n"
+        f"{meta_section}"
+        "Generate a single descriptive folder name for this group of photos.\n"
+        f"Category: {category}\n"
         f"{style}\n"
         "Hard rules:\n"
         "- snake_case, lowercase ASCII letters, digits, and underscores only\n"
         "- 40 characters or fewer\n"
         "- no quotes, no punctuation, no file extension, no date prefix\n"
+        "- if GPS location is provided above, work it into the name "
+        "(e.g. 'tokyo_street_food', 'paris_evening_walk', 'yosemite_hike')\n"
         "- name the specific event or place, not just the category\n"
         "- output ONLY the folder name, nothing else"
     )
 
 
-def build_cluster_metadata_context(photos: list[PhotoInput]) -> str:
-    """Format per-photo EXIF metadata as a compact text block for the classify call.
+def _time_of_day(hour: int) -> str:
+    if 5 <= hour < 8:
+        return "early morning"
+    if 8 <= hour < 12:
+        return "morning"
+    if 12 <= hour < 17:
+        return "afternoon"
+    if 17 <= hour < 21:
+        return "evening"
+    return "night"
 
-    Included alongside thumbnail images so the LLM can use camera make/model,
-    GPS presence, filename, and dimensions as hard evidence — not just visuals.
+
+def build_cluster_metadata_context(photos: list[PhotoInput]) -> str:
+    """Format rich EXIF metadata as a context block for ALL classification decisions.
+
+    Includes per-photo details (filename, camera, GPS coords, time-of-day, dimensions)
+    and a cluster-level summary (location centroid, time span, cameras seen).
+    Passed to the LLM alongside thumbnails so metadata can disambiguate category,
+    subcategory, and location — not just screenshot vs. photo.
     """
-    lines = ["--- Photo Metadata (primary evidence — read before looking at images) ---"]
+    if not photos:
+        return ""
+
+    lines = ["╌╌╌ PHOTO METADATA — read before looking at images ╌╌╌"]
+
     for i, photo in enumerate(photos, 1):
         m = photo.metadata
         camera = m.camera_model or "none"
-        gps = "yes" if m.gps else "no"
-        date = m.date_taken.strftime("%Y-%m-%d %H:%M") if m.date_taken else "unknown"
-        dims = f"{m.width}x{m.height}"
+        if m.gps:
+            gps_str = f"{m.gps.lat:.5f}, {m.gps.lon:.5f}"
+        else:
+            gps_str = "none"
+        if m.date_taken:
+            tod = _time_of_day(m.date_taken.hour)
+            date_str = f"{m.date_taken.strftime('%Y-%m-%d %H:%M')} ({tod})"
+        else:
+            date_str = "unknown"
+        kb = m.file_size // 1024
+        dims = f"{m.width}×{m.height}"
         lines.append(
-            f"  Photo {i}: {m.path.name} | {dims}px | camera: {camera} | gps: {gps} | date: {date}"
+            f"  [{i}] {m.path.name}  |  {dims}  |  {kb}KB"
+            f"\n      camera: {camera}  |  gps: {gps_str}  |  {date_str}"
         )
-    lines.append("---")
+
+    # ── Cluster summary ───────────────────────────────────────────────────────
+    lines.append("")
+    lines.append("CLUSTER SUMMARY:")
+
+    gps_list = [p.metadata.gps for p in photos if p.metadata.gps]
+    if gps_list:
+        avg_lat = sum(g.lat for g in gps_list) / len(gps_list)
+        avg_lon = sum(g.lon for g in gps_list) / len(gps_list)
+        lines.append(
+            f"  location centroid: {avg_lat:.5f}, {avg_lon:.5f}"
+            " — identify the nearest city/country/landmark and use it for category and name"
+        )
+    else:
+        lines.append("  location: no GPS data available")
+
+    dates = sorted(p.metadata.date_taken for p in photos if p.metadata.date_taken)
+    if len(dates) >= 2:
+        span = (dates[-1] - dates[0]).days
+        lines.append(
+            f"  time span: {dates[0].strftime('%Y-%m-%d')} → {dates[-1].strftime('%Y-%m-%d')}"
+            f" ({span}d) — spans > 1 day suggest a trip, event, or multi-day occasion"
+        )
+    elif dates:
+        lines.append(f"  date: {dates[0].strftime('%Y-%m-%d')}")
+
+    cameras = sorted({p.metadata.camera_model for p in photos if p.metadata.camera_model})
+    if cameras:
+        lines.append(f"  camera(s): {', '.join(cameras)}")
+
+    lines.append("╌╌╌")
     return "\n".join(lines)
 
 
