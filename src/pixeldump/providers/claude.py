@@ -22,6 +22,7 @@ from pixeldump.core.types import (
 )
 from pixeldump.providers._prompts import (
     CLASSIFY_SYSTEM_PROMPT,
+    build_cluster_metadata_context,
     build_name_prompt,
     build_roast_prompt,
 )
@@ -157,8 +158,11 @@ class ClaudeProvider(VisionProvider):
 
     def classify_cluster(self, photos: list[PhotoInput]) -> Classification:
         client = self._require_client()
-        content_blocks: list[dict[str, Any]] = []
-        for photo in photos[:_PHOTOS_PER_CLUSTER]:
+        sampled = photos[:_PHOTOS_PER_CLUSTER]
+        content_blocks: list[dict[str, Any]] = [
+            {"type": "text", "text": build_cluster_metadata_context(sampled)},
+        ]
+        for photo in sampled:
             content_blocks.append(
                 {
                     "type": "image",
@@ -172,7 +176,7 @@ class ClaudeProvider(VisionProvider):
         content_blocks.append(
             {
                 "type": "text",
-                "text": "Classify these photos. Respond with only the JSON object.",
+                "text": "Using the metadata above and the images, classify this cluster. Respond with only the JSON object.",
             }
         )
         try:

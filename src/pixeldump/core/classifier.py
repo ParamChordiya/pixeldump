@@ -1,6 +1,7 @@
 """Classify event clusters via a VisionProvider. Phase 4."""
 from __future__ import annotations
 
+import re
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 
@@ -12,6 +13,33 @@ from pixeldump.core.types import (
     PhotoMetadata,
 )
 from pixeldump.providers.base import VisionProvider
+
+# Filename patterns that identify a photo's type without calling the LLM.
+_SCREENSHOT_RE = re.compile(r"screenshot|screen[\s_-]shot", re.IGNORECASE)
+_CAMERA_RE = re.compile(r"^(img_|dsc_|dcim|mvi_|_dsc_)", re.IGNORECASE)
+
+
+def _metadata_heuristic(cluster: EventCluster) -> Classification | None:
+    """Return a Classification without an LLM call when metadata is unambiguous.
+
+    Currently handles one case: if every photo in the cluster has a camera
+    model set in EXIF, the cluster cannot be screenshots — skip the LLM and
+    let it classify content normally. Returns None to signal "call the LLM".
+
+    Screenshot detection via filename is handled first in _classify_one so
+    the LLM is also skipped for those.
+    """
+    # If any photo's filename clearly says "screenshot", classify immediately.
+    for photo in cluster.photos:
+        if _SCREENSHOT_RE.search(photo.path.stem):
+            return Classification(
+                category="documents",
+                subcategory="screenshot",
+                confidence=0.97,
+                description="screenshot identified from filename",
+                notable=[f"filename: {photo.path.name}"],
+            )
+    return None
 
 
 def classify_clusters(
@@ -30,6 +58,11 @@ def classify_clusters(
 
     def _classify_one(cluster: EventCluster) -> tuple[str, Classification]:
         try:
+            # Fast path: skip the LLM when filename metadata is unambiguous.
+            heuristic = _metadata_heuristic(cluster)
+            if heuristic is not None:
+                return cluster.cluster_id, heuristic
+
             sampled = sample_photos_for_cluster(cluster, max_samples=batch_size)
             inputs = [to_input_fn(m) for m in sampled]
             classification = provider.classify_cluster(inputs)

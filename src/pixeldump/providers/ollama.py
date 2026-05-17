@@ -18,6 +18,7 @@ from pixeldump.core.types import (
 )
 from pixeldump.providers._prompts import (
     CLASSIFY_SYSTEM_PROMPT,
+    build_cluster_metadata_context,
     build_name_prompt,
     build_roast_prompt,
 )
@@ -130,7 +131,9 @@ class OllamaProvider(VisionProvider):
     # --- main ops -----------------------------------------------------------
 
     def classify_cluster(self, photos: list[PhotoInput]) -> Classification:
-        images = [photo.thumbnail_bytes for photo in photos[:_PHOTOS_PER_CLUSTER]]
+        sampled = photos[:_PHOTOS_PER_CLUSTER]
+        images = [photo.thumbnail_bytes for photo in sampled]
+        metadata_ctx = build_cluster_metadata_context(sampled)
         try:
             resp = self._client.chat(
                 model=self.model,
@@ -138,7 +141,7 @@ class OllamaProvider(VisionProvider):
                     {"role": "system", "content": CLASSIFY_SYSTEM_PROMPT},
                     {
                         "role": "user",
-                        "content": "Classify these photos. JSON only.",
+                        "content": f"{metadata_ctx}\n\nUsing the metadata above and the images, classify this cluster. JSON only.",
                         "images": images,
                     },
                 ],

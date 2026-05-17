@@ -23,6 +23,7 @@ from pixeldump.core.types import (
 )
 from pixeldump.providers._prompts import (
     CLASSIFY_SYSTEM_PROMPT,
+    build_cluster_metadata_context,
     build_name_prompt,
     build_roast_prompt,
 )
@@ -77,9 +78,12 @@ class ClaudeCodeProvider(VisionProvider):
     def classify_cluster(self, photos: list[PhotoInput]) -> Classification:
         with tempfile.TemporaryDirectory(prefix="pixeldump_") as tmpdir:
             image_paths = _write_thumbnails(Path(tmpdir), photos)
+            metadata_ctx = build_cluster_metadata_context(photos)
             user_msg = (
-                "Read each image file listed below, then classify the photos "
-                "using the instructions above. Respond with ONLY the JSON object.\n\n"
+                f"{metadata_ctx}\n\n"
+                "Read each image file listed below, then classify the cluster "
+                "using the metadata above AND the visuals. "
+                "Respond with ONLY the JSON object.\n\n"
                 "Image files:\n" + "\n".join(f"- {p}" for p in image_paths)
             )
             raw = self._call(CLASSIFY_SYSTEM_PROMPT, user_msg)

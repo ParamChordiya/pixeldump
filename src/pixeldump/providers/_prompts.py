@@ -14,6 +14,15 @@ from pixeldump.core.types import LibraryStats, NamingMode
 CLASSIFY_SYSTEM_PROMPT: str = (
     "You are a vision classifier for a personal photo organizer. "
     "All photos supplied come from the same time-clustered event. "
+    "You will receive METADATA for each photo AND the thumbnail images. "
+    "Always read the metadata first — it is more reliable than visual appearance alone.\n\n"
+    "METADATA RULES (follow strictly, they override visual guesses):\n"
+    "  • camera field is set (e.g. 'Apple iPhone 15 Pro')  →  this IS a camera photo, "
+    "NEVER classify as any screenshot subcategory\n"
+    "  • gps = yes  →  this IS a camera photo, NEVER classify as any screenshot subcategory\n"
+    "  • filename contains 'screenshot' or 'Screen Shot'  →  IS a screenshot\n"
+    "  • filename pattern IMG_XXXX / DSC_XXXX / DCIM  →  camera photo\n"
+    "  • camera = none AND gps = no  →  visuals may be a screenshot; inspect carefully\n\n"
     "Classify the event into one PRIMARY CATEGORY and the most specific SUBCATEGORY.\n\n"
 
     "PRIMARY CATEGORIES (pick exactly one):\n"
@@ -139,6 +148,26 @@ def build_name_prompt(category: str, mode: NamingMode) -> str:
         "- name the specific event or place, not just the category\n"
         "- output ONLY the folder name, nothing else"
     )
+
+
+def build_cluster_metadata_context(photos: list[PhotoInput]) -> str:
+    """Format per-photo EXIF metadata as a compact text block for the classify call.
+
+    Included alongside thumbnail images so the LLM can use camera make/model,
+    GPS presence, filename, and dimensions as hard evidence — not just visuals.
+    """
+    lines = ["--- Photo Metadata (primary evidence — read before looking at images) ---"]
+    for i, photo in enumerate(photos, 1):
+        m = photo.metadata
+        camera = m.camera_model or "none"
+        gps = "yes" if m.gps else "no"
+        date = m.date_taken.strftime("%Y-%m-%d %H:%M") if m.date_taken else "unknown"
+        dims = f"{m.width}x{m.height}"
+        lines.append(
+            f"  Photo {i}: {m.path.name} | {dims}px | camera: {camera} | gps: {gps} | date: {date}"
+        )
+    lines.append("---")
+    return "\n".join(lines)
 
 
 def build_roast_prompt(stats: LibraryStats) -> str:
