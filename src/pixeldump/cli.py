@@ -418,49 +418,88 @@ def setup() -> None:
 
     cfg = load_config()
 
-    # Show claude-code status upfront so users know if they already have it.
-    ccp = ClaudeCodeProvider()
-    if ccp.is_available():
-        click.echo("claude-code: detected — no setup needed. ✓")
-    else:
-        click.echo(
-            "claude-code: not found. install Claude Code (https://claude.ai/code) "
-            "to use this provider without an API key."
-        )
+    # ── 1. Probe all providers and show their status ─────────────────────────
+    click.echo("\nchecking available providers...\n")
 
-    choice = click.prompt(
-        "which provider to configure?",
-        type=click.Choice(["claude", "ollama", "both", "skip"]),
-        default="skip" if ccp.is_available() else "both",
+    ccp = ClaudeCodeProvider()
+    cc_ok = ccp.is_available()
+    click.echo(
+        f"  claude-code  {'✓ detected (no API key needed)' if cc_ok else '✗ not found — install Claude Code: https://claude.ai/code'}"
     )
 
-    if choice in {"claude", "both"}:
-        api_key = click.prompt(
-            "anthropic api key", hide_input=True, default="", show_default=False
+    api_key = os.environ.get("ANTHROPIC_API_KEY") or cfg.get("claude_api_key")
+    claude_ok = bool(api_key)
+    click.echo(
+        f"  claude       {'✓ API key found' if claude_ok else '✗ no API key configured'}"
+    )
+
+    op = OllamaProvider(
+        host=cfg.get("ollama_host", "http://localhost:11434"),
+        model=cfg.get("ollama_model", "gemma3"),
+    )
+    ollama_ok = op.is_available()
+    click.echo(
+        f"  ollama       {'✓ running' if ollama_ok else '✗ not reachable'}"
+    )
+
+    click.echo()
+
+    # ── 2. Optionally configure claude / ollama credentials ──────────────────
+    creds_choice = click.prompt(
+        "configure credentials for",
+        type=click.Choice(["claude", "ollama", "both", "skip"]),
+        default="skip",
+    )
+
+    if creds_choice in {"claude", "both"}:
+        new_key = click.prompt(
+            "anthropic API key", hide_input=True, default="", show_default=False
         )
-        if api_key:
-            cp = ClaudeProvider(api_key=api_key)
+        if new_key:
+            cp = ClaudeProvider(api_key=new_key)
             if cp.is_available():
-                cfg["claude_api_key"] = api_key
+                cfg["claude_api_key"] = new_key
+                claude_ok = True
                 click.echo("claude: ok.")
             else:
                 click.echo("claude: not reachable; key NOT saved.", err=True)
         else:
-            click.echo("claude: skipped (no key).")
+            click.echo("claude: skipped (no key entered).")
 
-    if choice in {"ollama", "both"}:
+    if creds_choice in {"ollama", "both"}:
         host = click.prompt("ollama host", default="http://localhost:11434")
         model = click.prompt("ollama model", default="gemma3")
-        op = OllamaProvider(host=host, model=model)
-        if op.is_available():
+        op2 = OllamaProvider(host=host, model=model)
+        if op2.is_available():
             cfg["ollama_host"] = host
             cfg["ollama_model"] = model
+            ollama_ok = True
             click.echo("ollama: ok.")
         else:
             click.echo("ollama: not reachable; settings NOT saved.", err=True)
 
+    # ── 3. Pick default provider ─────────────────────────────────────────────
+    click.echo()
+    available = []
+    if cc_ok:
+        available.append("claude-code")
+    if claude_ok:
+        available.append("claude")
+    if ollama_ok:
+        available.append("ollama")
+    available.append("auto")
+
+    current_default = cfg.get("provider", "auto")
+    default_provider = click.prompt(
+        "default provider",
+        type=click.Choice(available),
+        default=current_default if current_default in available else available[0],
+    )
+    cfg["provider"] = default_provider
+
     save_config(cfg)
-    click.echo(f"saved config to {default_config_path()}.")
+    click.echo(f"\nsaved. default provider: {default_provider}.")
+    click.echo(f"config: {default_config_path()}")
 
 
 @main.command()
