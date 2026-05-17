@@ -3,6 +3,21 @@
 All notable changes to PixelDump will be documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+
+## [0.1.1] - 2026-05-16
+
+### Added
+- Claude Code provider (local `claude` CLI, no API key required)
+- Config and manifest files written with `0o600` permissions
+- API key redacted from `pixeldump config` stdout
+
+### Fixed
+- Ollama `format="json"` fallback for models that don't support it
+- Cost estimate uses classified photo count, not total
+- `ClaudeCodeProvider.is_available()` caches result and handles timeout
+
+### Removed
+- Dead `FolderName.full` property
 Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
