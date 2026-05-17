@@ -218,6 +218,6 @@ MIT. See [LICENSE](LICENSE).
 
 <div align="center">
 
-*built by people who have absolutely been roasted by their own camera rolls*
+*built by me because my photos folder was a crime scene*
 
 </div>
