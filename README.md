@@ -65,9 +65,9 @@ The vision model looks at the photos and writes the folder name based on what it
 
 | Mode | Example output |
 |---|---|
-| `--mode corporate` 🏢 | `2024_03_tokyo_client_summit` · `2024_06_sarah_alex_wedding_tuscany` · `2024_07_team_offsite_q2_2024` |
-| `--mode chaotic` 🔥 | `2024_03_ate_in_tokyo_fr` · `2024_06_main_character_bali_era` · `2024_07_family_chaos_thanksgiving` |
-| `--mode unhinged` 🫠 | `2024_03_proof_i_touched_grass` · `2024_06_the_yassification_of_brunch` · `2024_07_my_villain_era_in_milan` |
+| `--mode corporate` 🏢 | `2024_03/tokyo_client_summit/` · `2024_06/sarah_alex_wedding_tuscany/` · `2024_07/team_offsite_q2_2024/` |
+| `--mode chaotic` 🔥 | `2024_03/ate_in_tokyo_fr/` · `2024_06/main_character_bali_era/` · `2024_07/family_chaos_thanksgiving/` |
+| `--mode unhinged` 🫠 | `2024_03/proof_i_touched_grass/` · `2024_06/the_yassification_of_brunch/` · `2024_07/my_villain_era_in_milan/` |
 
 ## 🧠 provider setup
 
