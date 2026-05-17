@@ -12,7 +12,7 @@
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-170%20passing-brightgreen.svg)](#)
+[![Tests](https://img.shields.io/badge/tests-236%20passing-brightgreen.svg)](#)
 [![Type Checked](https://img.shields.io/badge/mypy-strict-blue.svg)](#)
 
 **PixelDump** is an agentic AI photo organizer that uses vision LLMs to sort your camera roll into intelligently named folders. It deduplicates near-identical shots, groups photos into events, and writes folder names with the energy of a chronically-online friend.
@@ -24,7 +24,7 @@
 ## ✨ what it does
 
 - 📸 **Sorts photos into events** — uses EXIF dates + GPS clustering, not just "by year"
-- 🧠 **Vision-LLM classification** — Claude API or local Ollama (Gemma 3 / LLaVA)
+- 🧠 **Vision-LLM classification** — Claude Code (no API key), Claude API, or local Ollama (Gemma 3 / LLaVA)
 - 💀 **Catches duplicates** — exact (SHA-256) and near-duplicate (perceptual hash)
 - 🏷️ **Three naming vibes** — corporate, chaotic, or unhinged (your call)
 - 📂 **Granular document routing** — screenshots, bills, boarding passes, prescriptions, and more each land in their own typed folder automatically
@@ -49,6 +49,9 @@ pixeldump run ~/Photos --dry-run
 # yes, do it
 pixeldump run ~/Photos --apply
 
+# use claude-code provider (no API key needed)
+pixeldump run ~/Photos --provider claude-code --apply
+
 # corporate mode, sass off, batch hard
 pixeldump run ~/Photos --mode corporate --sass 0 --apply
 
@@ -71,24 +74,34 @@ The vision model looks at the photos and writes the folder name based on what it
 
 ## 🧠 provider setup
 
-PixelDump works with Anthropic's Claude API (best vision quality) or Ollama (local & free).
+PixelDump supports three vision providers. Run `pixeldump setup` to configure whichever you want.
 
-**Claude (recommended for accuracy):**
+**Claude Code (recommended — no API key required):**
+
+If you already have [Claude Code](https://claude.ai/code) installed and logged in, PixelDump reuses your existing session. Nothing extra to configure.
+
+```bash
+# confirm claude is on your PATH
+claude --version
+pixeldump setup   # pick "claude-code"
+```
+
+**Claude API (best accuracy, pay-per-use):**
 
 ```bash
 export ANTHROPIC_API_KEY=sk-ant-...
-pixeldump setup
+pixeldump setup   # pick "claude"
 ```
 
-**Ollama (local, free, slower):**
+**Ollama (fully local, free, slower):**
 
 ```bash
 # install ollama from https://ollama.com
 ollama pull gemma3
-pixeldump setup
+pixeldump setup   # pick "ollama"
 ```
 
-If both are configured, PixelDump auto-detects and prefers Claude. Override with `--provider`.
+Auto-detection order when `--provider auto` (the default): **claude-code → claude API → ollama**. Override with `--provider claude-code`, `--provider claude`, or `--provider ollama`.
 
 ## 📁 output structure
 
@@ -140,7 +153,7 @@ Events land in `YYYY/YYYY_MM/event_name/` so each month is its own browsable fol
 ```
 pixeldump run TARGET [OPTIONS]
 
-  --provider [claude|ollama|auto]      vision LLM provider
+  --provider [claude-code|claude|ollama|auto]  vision LLM provider (default: auto)
   --mode [corporate|chaotic|unhinged]  folder name vibe (default: chaotic)
   --sass [0-3]                         personality intensity (default: 2)
   --burst-hours INT                    event clustering gap (default: 72h)
@@ -163,15 +176,19 @@ pixeldump setup                        re-run provider setup
 
 ## 💸 cost
 
-Rough rule of thumb with Claude: **~$0.001 per photo**, since PixelDump batches photos by event and only sends one classification call per cluster (not per photo). A 1,500-photo library typically costs under $2. Use `--estimate` to see the exact number for your library before running.
+**Claude Code**: free — runs inside your existing Claude Code subscription, no extra charges.
 
-Local Ollama is free, just slower. Bring your GPU energy.
+**Claude API**: rough rule of thumb **~$0.001 per photo**, since PixelDump batches photos by event and sends one classification call per cluster (not per photo). A 1,500-photo library typically costs under $2. Use `--estimate` to see the exact number for your library before running.
+
+**Ollama**: free, just slower. Bring your GPU energy.
 
 ## 🔒 your photos stay yours
 
+- **Claude Code** reuses your local CLI session — 512px thumbnails are passed to the local `claude` process, same data boundary as using Claude Code interactively
 - **Local Ollama** sees nothing leave your machine
 - **Claude API** receives 512px thumbnails (not full-resolution photos), and Anthropic does not train on API inputs
 - **Nothing is ever deleted.** Files are moved, never removed. Every operation is logged and reversible.
+- **Config files** containing API keys are written with owner-only permissions (mode 0600)
 
 ## 🛠️ development
 
