@@ -444,58 +444,47 @@ def setup() -> None:
 
     click.echo()
 
-    # ── 2. Optionally configure claude / ollama credentials ──────────────────
-    creds_choice = click.prompt(
-        "configure credentials for",
-        type=click.Choice(["claude", "ollama", "both", "skip"]),
-        default="skip",
-    )
-
-    if creds_choice in {"claude", "both"}:
-        new_key = click.prompt(
-            "anthropic API key", hide_input=True, default="", show_default=False
-        )
-        if new_key:
-            cp = ClaudeProvider(api_key=new_key)
-            if cp.is_available():
-                cfg["claude_api_key"] = new_key
-                claude_ok = True
-                click.echo("claude: ok.")
-            else:
-                click.echo("claude: not reachable; key NOT saved.", err=True)
-        else:
-            click.echo("claude: skipped (no key entered).")
-
-    if creds_choice in {"ollama", "both"}:
-        host = click.prompt("ollama host", default="http://localhost:11434")
-        model = click.prompt("ollama model", default="gemma3")
-        op2 = OllamaProvider(host=host, model=model)
-        if op2.is_available():
-            cfg["ollama_host"] = host
-            cfg["ollama_model"] = model
-            ollama_ok = True
-            click.echo("ollama: ok.")
-        else:
-            click.echo("ollama: not reachable; settings NOT saved.", err=True)
-
-    # ── 3. Pick default provider ─────────────────────────────────────────────
-    click.echo()
-    available = []
-    if cc_ok:
-        available.append("claude-code")
-    if claude_ok:
-        available.append("claude")
-    if ollama_ok:
-        available.append("ollama")
-    available.append("auto")
-
+    # ── 2. Pick default provider first ───────────────────────────────────────
+    all_providers = ["claude-code", "claude", "ollama", "auto"]
     current_default = cfg.get("provider", "auto")
+
     default_provider = click.prompt(
         "default provider",
-        type=click.Choice(available),
-        default=current_default if current_default in available else available[0],
+        type=click.Choice(all_providers),
+        default=current_default if current_default in all_providers else "auto",
     )
     cfg["provider"] = default_provider
+
+    # ── 3. Configure credentials only if the chosen provider needs them ──────
+    if default_provider == "claude-code":
+        click.echo("claude-code: no credentials needed. ✓")
+
+    if default_provider in {"claude", "auto"} and not claude_ok:
+        if click.confirm("configure anthropic API key?", default=True):
+            new_key = click.prompt(
+                "anthropic API key", hide_input=True, default="", show_default=False
+            )
+            if new_key:
+                cp = ClaudeProvider(api_key=new_key)
+                if cp.is_available():
+                    cfg["claude_api_key"] = new_key
+                    click.echo("claude: ok.")
+                else:
+                    click.echo("claude: not reachable; key NOT saved.", err=True)
+            else:
+                click.echo("claude: skipped.")
+
+    if default_provider in {"ollama", "auto"} and not ollama_ok:
+        if click.confirm("configure ollama?", default=False):
+            host = click.prompt("ollama host", default="http://localhost:11434")
+            model = click.prompt("ollama model", default="gemma3")
+            op2 = OllamaProvider(host=host, model=model)
+            if op2.is_available():
+                cfg["ollama_host"] = host
+                cfg["ollama_model"] = model
+                click.echo("ollama: ok.")
+            else:
+                click.echo("ollama: not reachable; settings NOT saved.", err=True)
 
     save_config(cfg)
     click.echo(f"\nsaved. default provider: {default_provider}.")
