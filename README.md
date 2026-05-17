@@ -97,26 +97,29 @@ After a run, your photo directory looks like this:
 ```
 Photos/
 ├── 2024/
-│   ├── 2024_03_ate_good_in_tokyo/      # events get LLM-named folders
-│   ├── 2024_06_birthday_party/
-│   ├── 2024_07_proof_i_had_friends/
+│   ├── 2024_03/                        # month folder groups all events from that month
+│   │   ├── ate_good_in_tokyo/          # LLM-named event subfolders live inside
+│   │   └── cherry_blossom_picnic/
+│   ├── 2024_06/
+│   │   ├── sarah_alex_wedding_tuscany/
+│   │   └── main_character_bali_era/
 │   │
-│   ├── screenshots/                    # generic screen captures
-│   ├── screenshots_apps/               # app UI captures
-│   ├── screenshots_conversations/      # DM / text thread screenshots
-│   ├── screenshots_social/             # posts, reels, stories saved as screenshots
-│   ├── screenshots_memes/              # meme hoarding, no judgement
-│   ├── screenshots_web/                # browser / webpage captures
-│   ├── screenshots_maps/               # maps and directions
+│   ├── screenshots/                    # document-type folders sit flat under the year
+│   ├── screenshots_apps/
+│   ├── screenshots_conversations/
+│   ├── screenshots_social/
+│   ├── screenshots_memes/
+│   ├── screenshots_web/
+│   ├── screenshots_maps/
 │   │
-│   ├── documents_receipts/             # store and restaurant receipts
-│   ├── documents_bills/                # utility bills and invoices
+│   ├── documents_receipts/
+│   ├── documents_bills/
 │   ├── documents_financial/            # bank statements, credit cards, tax docs, paychecks
-│   ├── documents_ids/                  # ID cards, passports, licences, insurance cards, visas
+│   ├── documents_ids/                  # passports, licences, insurance cards, visas
 │   ├── documents_travel/               # boarding passes, hotel confirmations, event tickets
 │   ├── documents_medical/              # prescriptions, lab results, vaccine records
 │   ├── documents_legal/                # contracts, leases, certificates
-│   └── documents_misc/                 # menus, business cards, whiteboards, QR codes, forms
+│   └── documents_misc/                 # menus, business cards, whiteboards, QR codes
 │
 ├── 2023/
 │   └── ...
@@ -130,7 +133,7 @@ Photos/
     └── thumbnails/        # cached thumbnails
 ```
 
-Documents are routed to their typed folder without LLM naming — every receipt lands in `documents_receipts/`, every boarding pass in `documents_travel/`, and so on. No creative folder names needed when the category is self-explanatory.
+Events land in `YYYY/YYYY_MM/event_name/` so each month is its own browsable folder. Documents and screenshots sit flat under the year (`YYYY/documents_receipts/`) since they accumulate all year and don't need month grouping.
 
 ## 🧰 all flags
 

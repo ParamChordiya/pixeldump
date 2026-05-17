@@ -77,7 +77,7 @@ def test_plan_moves_routes_clusters_to_year_subfolder(tmp_path: Path) -> None:
     ops = plan_moves([cluster], folder_names, [], config)
 
     assert len(ops) == 2
-    expected_dir = target_dir / "2024" / "2024_03_japan_trip"
+    expected_dir = target_dir / "2024" / "2024_03" / "japan_trip"
     assert ops[0].destination == expected_dir / "IMG_4021.jpg"
     assert ops[1].destination == expected_dir / "IMG_4022.jpg"
     assert all(op.action == "move" for op in ops)
@@ -120,7 +120,7 @@ def test_plan_moves_does_not_double_move_kept_dup(tmp_path: Path) -> None:
     assert sources == {kept_path, dup_path}
     # kept goes to event folder
     kept_op = next(op for op in ops if op.source == kept_path)
-    assert kept_op.destination == (tmp_path / "out") / "2024" / "2024_03_japan_trip" / "kept.jpg"
+    assert kept_op.destination == (tmp_path / "out") / "2024" / "2024_03" / "japan_trip" / "kept.jpg"
     # dup goes to review
     dup_op = next(op for op in ops if op.source == dup_path)
     assert dup_op.destination == (tmp_path / "out") / "_review" / "duplicates" / "dup.jpg"
@@ -164,7 +164,7 @@ def test_plan_moves_screenshot_year_path(tmp_path: Path) -> None:
     ops = plan_moves([cluster], folder_names, [], config)
 
     assert len(ops) == 1
-    assert ops[0].destination == (tmp_path / "out") / "2024" / "2024_screenshots" / "IMG_5000.png"
+    assert ops[0].destination == (tmp_path / "out") / "2024" / "screenshots" / "IMG_5000.png"
 
 
 def test_plan_moves_filename_collision_appends_suffix(tmp_path: Path) -> None:
@@ -179,7 +179,7 @@ def test_plan_moves_filename_collision_appends_suffix(tmp_path: Path) -> None:
     ops = plan_moves([cluster], folder_names, [], config)
 
     assert len(ops) == 2
-    base = (tmp_path / "out") / "2024" / "2024_03_trip"
+    base = (tmp_path / "out") / "2024" / "2024_03" / "trip"
     assert ops[0].destination == base / "IMG_1.jpg"
     assert ops[1].destination == base / "IMG_1_1.jpg"
 

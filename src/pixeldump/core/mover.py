@@ -30,9 +30,12 @@ def _destination_for(root: Path, folder_name: FolderName, source_name: str) -> P
     if _is_review(folder_name):
         # _review/<bucket>/<file>
         return root / "_review" / folder_name.name / source_name
-    # date_prefix is "YYYY" or "YYYY_MM"; year segment is the first 4 chars
     year = folder_name.date_prefix[:4]
-    return root / year / folder_name.full / source_name
+    if len(folder_name.date_prefix) == 4:
+        # Year-only prefix (documents, screenshots): root/YYYY/name/file
+        return root / year / folder_name.name / source_name
+    # Year+month prefix (events): root/YYYY/YYYY_MM/name/file
+    return root / year / folder_name.date_prefix / folder_name.name / source_name
 
 
 def _resolve_collision(dest: Path, used: set[Path]) -> Path:
