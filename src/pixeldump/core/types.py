@@ -85,10 +85,6 @@ class FolderName:
     name: str                            # e.g., "ate_good_in_tokyo" (no date prefix yet)
     date_prefix: str                     # e.g., "2024_03"
 
-    @property
-    def full(self) -> str:
-        return f"{self.date_prefix}_{self.name}"
-
 
 @dataclass(frozen=True, slots=True)
 class CostEstimate:

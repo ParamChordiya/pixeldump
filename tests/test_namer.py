@@ -5,7 +5,9 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from unittest.mock import MagicMock
 
-from pixeldump.core.namer import name_cluster, sanitize_name
+import pytest
+
+from pixeldump.core.namer import _DOCUMENT_ROUTES, name_cluster, sanitize_name
 from pixeldump.core.types import (
     Classification,
     EventCluster,
@@ -187,3 +189,35 @@ def test_name_cluster_calls_provider_with_correct_mode() -> None:
     args, _ = provider.name_event.call_args
     assert args[1] == "social"
     assert args[2] == NamingMode.UNHINGED
+
+
+# --- _DOCUMENT_ROUTES ----------------------------------------------------
+
+
+@pytest.mark.parametrize("subcategory,expected_folder", list(_DOCUMENT_ROUTES.items()))
+def test_document_route_maps_subcategory_to_folder(subcategory: str, expected_folder: str) -> None:
+    """Every entry in _DOCUMENT_ROUTES maps correctly through name_cluster."""
+    cluster = _make_cluster(date_start=datetime(2024, 5, 10))
+    provider = MagicMock(spec=VisionProvider)
+    classification = _classification(
+        category="documents",
+        subcategory=subcategory,
+        confidence=0.95,
+    )
+    result = name_cluster(cluster, classification, provider, NamingMode.CHAOTIC, _to_input)
+    assert result.name == expected_folder
+    assert result.date_prefix == "2024"
+    provider.name_event.assert_not_called()
+
+
+def test_document_unknown_subcategory_routes_to_misc() -> None:
+    cluster = _make_cluster(date_start=datetime(2024, 5, 10))
+    provider = MagicMock(spec=VisionProvider)
+    classification = _classification(
+        category="documents",
+        subcategory="something_weird",
+        confidence=0.95,
+    )
+    result = name_cluster(cluster, classification, provider, NamingMode.CHAOTIC, _to_input)
+    assert result.name == "documents_misc"
+    assert result.date_prefix == "2024"

@@ -54,3 +54,4 @@ def save_config(data: dict[str, Any], path: Path | None = None) -> None:
     target.parent.mkdir(parents=True, exist_ok=True)
     text: str = yaml.safe_dump(data, sort_keys=True)
     target.write_text(text, encoding="utf-8")
+    target.chmod(0o600)  # config may contain API keys — not world-readable

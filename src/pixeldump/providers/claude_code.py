@@ -49,23 +49,29 @@ class ClaudeCodeProvider(VisionProvider):
     def __init__(self, timeout: int = 120) -> None:
         self._timeout = timeout
         self._cli: str | None = shutil.which("claude")
+        self._available_cache: bool | None = None
 
     # ── availability ─────────────────────────────────────────────────────────
 
     def is_available(self) -> bool:
         """Return True if the ``claude`` CLI is installed and responsive."""
+        if self._available_cache is not None:
+            return self._available_cache
         if self._cli is None:
+            self._available_cache = False
             return False
         try:
             result = subprocess.run(
                 [self._cli, "--version"],
                 capture_output=True,
                 text=True,
+                stdin=subprocess.DEVNULL,
                 timeout=10,
             )
-            return result.returncode == 0
+            self._available_cache = result.returncode == 0
         except (subprocess.TimeoutExpired, OSError):
-            return False
+            self._available_cache = False
+        return self._available_cache
 
     # ── cost ─────────────────────────────────────────────────────────────────
 
@@ -122,13 +128,18 @@ class ClaudeCodeProvider(VisionProvider):
         The Read tool is explicitly allowed so Claude can open the temp
         thumbnail files without interactive permission prompts.
         """
-        assert self._cli is not None  # guarded by is_available()
+        if self._cli is None:
+            raise RuntimeError(
+                "ClaudeCodeProvider: claude CLI path is None. "
+                "Call is_available() before making LLM requests."
+            )
         prompt = f"{system}\n\n{user}".strip() if system else user
         try:
             result = subprocess.run(
                 [self._cli, "-p", prompt, "--allowedTools", "Read"],
                 capture_output=True,
                 text=True,
+                stdin=subprocess.DEVNULL,
                 timeout=self._timeout,
             )
         except (subprocess.TimeoutExpired, OSError):

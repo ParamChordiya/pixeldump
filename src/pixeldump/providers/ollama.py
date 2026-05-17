@@ -134,21 +134,26 @@ class OllamaProvider(VisionProvider):
         sampled = photos[:_PHOTOS_PER_CLUSTER]
         images = [photo.thumbnail_bytes for photo in sampled]
         metadata_ctx = build_cluster_metadata_context(sampled)
+        messages = [
+            {"role": "system", "content": CLASSIFY_SYSTEM_PROMPT},
+            {
+                "role": "user",
+                "content": f"{metadata_ctx}\n\nUsing the metadata above and the images, classify this cluster. JSON only.",
+                "images": images,
+            },
+        ]
         try:
             resp = self._client.chat(
                 model=self.model,
-                messages=[
-                    {"role": "system", "content": CLASSIFY_SYSTEM_PROMPT},
-                    {
-                        "role": "user",
-                        "content": f"{metadata_ctx}\n\nUsing the metadata above and the images, classify this cluster. JSON only.",
-                        "images": images,
-                    },
-                ],
+                messages=messages,
                 format="json",
             )
-        except Exception:  # noqa: BLE001 - connection/timeout: graceful fallback.
-            return _parse_error_classification()
+        except Exception:  # noqa: BLE001
+            # format="json" unsupported by this model/version — retry without it.
+            try:
+                resp = self._client.chat(model=self.model, messages=messages)
+            except Exception:  # noqa: BLE001
+                return _parse_error_classification()
 
         text = _extract_response_text(resp)
         return _parse_classification(text)

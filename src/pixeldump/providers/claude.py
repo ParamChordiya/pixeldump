@@ -159,9 +159,10 @@ class ClaudeProvider(VisionProvider):
     def classify_cluster(self, photos: list[PhotoInput]) -> Classification:
         client = self._require_client()
         sampled = photos[:_PHOTOS_PER_CLUSTER]
-        content_blocks: list[dict[str, Any]] = [
-            {"type": "text", "text": build_cluster_metadata_context(sampled)},
-        ]
+        content_blocks: list[dict[str, Any]] = []
+        metadata_text = build_cluster_metadata_context(sampled)
+        if metadata_text:
+            content_blocks.append({"type": "text", "text": metadata_text})
         for photo in sampled:
             content_blocks.append(
                 {

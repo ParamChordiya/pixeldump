@@ -221,9 +221,11 @@ class Pipeline:
         # Elapsed.
         self._stats.elapsed_seconds = (datetime.now() - self._started_at).total_seconds()
 
-        # Cost (Claude only).
+        # Cost (Claude only). Duplicates are skipped by the classifier, so
+        # subtract them from the photo count to avoid inflating the estimate.
         try:
-            cost = self.provider.estimate_cost(self._stats.total_photos)
+            classified_count = self._stats.total_photos - self._stats.duplicates
+            cost = self.provider.estimate_cost(max(0, classified_count))
         except Exception:
             cost = None
         if cost is not None:

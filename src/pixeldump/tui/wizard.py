@@ -121,7 +121,7 @@ def run_wizard(
     console = console or Console()
     if sass is None:
         sass = SassEngine(level=2)
-    providers = available_providers or ["claude", "ollama"]
+    providers = available_providers or ["claude-code", "claude", "ollama"]
 
     provider = _pick_provider(console, providers)
     naming_mode = _pick_naming_mode(console)

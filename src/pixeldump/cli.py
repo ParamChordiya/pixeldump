@@ -287,9 +287,17 @@ def run(
             click.echo("wizard cancelled.", err=True)
             sys.exit(1)
     else:
+        try:
+            provider_enum = ProviderName(chosen_provider)
+        except ValueError:
+            click.echo(
+                f"unknown provider {chosen_provider!r} in config; falling back to auto.",
+                err=True,
+            )
+            provider_enum = ProviderName.AUTO
         pipeline_config = PipelineConfig(
             target_dir=target,
-            provider=ProviderName(chosen_provider),
+            provider=provider_enum,
             naming_mode=NamingMode(chosen_mode),
             sass_level=chosen_sass,
             burst_hours=chosen_burst,
@@ -406,7 +414,11 @@ def config(reset: bool) -> None:
         click.echo(yaml.safe_dump(dict(DEFAULT_CONFIG), sort_keys=True))
         return
     data = load_config(path)
-    click.echo(yaml.safe_dump(data, sort_keys=True))
+    display = {
+        k: ("***" if k == "claude_api_key" and v else v)
+        for k, v in data.items()
+    }
+    click.echo(yaml.safe_dump(display, sort_keys=True))
 
 
 @main.command()

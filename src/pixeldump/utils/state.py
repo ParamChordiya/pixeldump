@@ -58,6 +58,7 @@ def write_manifest(target: Path, manifest: RunManifest) -> Path:
     out = base / "manifests" / f"{manifest.run_id}.json"
     payload = _to_jsonable(manifest)
     out.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    out.chmod(0o600)  # manifests contain file paths; restrict to owner
     return out
 
 

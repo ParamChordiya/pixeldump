@@ -6,6 +6,7 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 from pixeldump.core.classifier import (
+    _metadata_heuristic,
     classify_clusters,
     sample_photos_for_cluster,
 )
@@ -171,3 +172,67 @@ def test_classify_clusters_passes_photo_inputs_to_provider() -> None:
     for pi in sent_inputs:
         assert isinstance(pi, PhotoInput)
         assert pi.thumbnail_bytes == b"fake"
+
+
+# --- _metadata_heuristic -------------------------------------------------
+
+
+def _make_cluster_with_paths(paths: list[Path]) -> EventCluster:
+    photos = []
+    for i, p in enumerate(paths):
+        photos.append(
+            PhotoMetadata(
+                path=p,
+                date_taken=datetime(2024, 3, 15, 12, 0, 0) + timedelta(minutes=i),
+                gps=None,
+                camera_model=None,
+                width=4000,
+                height=3000,
+                file_size=1_000_000,
+            )
+        )
+    start = photos[0].date_taken
+    end = photos[-1].date_taken
+    assert start is not None
+    assert end is not None
+    return EventCluster(
+        cluster_id="c1",
+        photos=photos,
+        date_start=start,
+        date_end=end,
+    )
+
+
+def test_metadata_heuristic_screenshot_filename() -> None:
+    cluster = _make_cluster_with_paths([Path("/tmp/screenshot_123.jpg")])
+    result = _metadata_heuristic(cluster)
+    assert result is not None
+    assert result.category == "documents"
+    assert result.subcategory == "screenshot"
+
+
+def test_metadata_heuristic_screen_shot_with_hyphen() -> None:
+    cluster = _make_cluster_with_paths([Path("/tmp/Screen Shot 2024.jpg")])
+    result = _metadata_heuristic(cluster)
+    assert result is not None
+    assert result.category == "documents"
+    assert result.subcategory == "screenshot"
+
+
+def test_metadata_heuristic_normal_photo() -> None:
+    cluster = _make_cluster_with_paths([Path("/tmp/IMG_4021.jpg")])
+    result = _metadata_heuristic(cluster)
+    assert result is None
+
+
+def test_metadata_heuristic_uses_first_match() -> None:
+    paths = [
+        Path("/tmp/IMG_0001.jpg"),
+        Path("/tmp/screenshot_456.jpg"),
+        Path("/tmp/IMG_0003.jpg"),
+    ]
+    cluster = _make_cluster_with_paths(paths)
+    result = _metadata_heuristic(cluster)
+    assert result is not None
+    assert result.category == "documents"
+    assert result.subcategory == "screenshot"

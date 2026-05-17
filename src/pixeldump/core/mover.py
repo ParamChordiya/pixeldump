@@ -31,11 +31,11 @@ def _destination_for(root: Path, folder_name: FolderName, source_name: str) -> P
         # _review/<bucket>/<file>
         return root / "_review" / folder_name.name / source_name
     year = folder_name.date_prefix[:4]
-    if len(folder_name.date_prefix) == 4:
-        # Year-only prefix (documents, screenshots): root/YYYY/name/file
-        return root / year / folder_name.name / source_name
-    # Year+month prefix (events): root/YYYY/YYYY_MM/name/file
-    return root / year / folder_name.date_prefix / folder_name.name / source_name
+    if len(folder_name.date_prefix) == 7:
+        # Year+month prefix (YYYY_MM events): root/YYYY/YYYY_MM/name/file
+        return root / year / folder_name.date_prefix / folder_name.name / source_name
+    # Year-only or unexpected prefix: treat as flat under year
+    return root / year / folder_name.name / source_name
 
 
 def _resolve_collision(dest: Path, used: set[Path]) -> Path:

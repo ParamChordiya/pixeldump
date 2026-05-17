@@ -47,3 +47,12 @@ Thumbs.db
 .pixeldump/
 *.pixeldump-cache/
 thumbnails/
+
+# Credentials and secrets — never commit these
+*.key
+*.pem
+secrets.yaml
+secrets.json
+local_config.yaml
+.env.local
+.env.production

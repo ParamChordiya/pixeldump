@@ -81,9 +81,10 @@ def test_classification_default_notable() -> None:
     assert cl.notable == []
 
 
-def test_folder_name_full() -> None:
+def test_folder_name_fields() -> None:
     f = FolderName(name="ate_good_in_tokyo", date_prefix="2024_03")
-    assert f.full == "2024_03_ate_good_in_tokyo"
+    assert f.name == "ate_good_in_tokyo"
+    assert f.date_prefix == "2024_03"
 
 
 def test_cost_estimate_frozen() -> None:

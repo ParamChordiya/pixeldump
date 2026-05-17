@@ -12,12 +12,15 @@ from pixeldump.core.taxonomy import is_valid_category
 from pixeldump.core.types import (
     Classification,
     CostEstimate,
+    GPSCoord,
     LibraryStats,
     NamingMode,
     PhotoInput,
     PhotoMetadata,
 )
+from pixeldump.providers._prompts import build_cluster_metadata_context, _time_of_day
 from pixeldump.providers.claude import ClaudeProvider
+from pixeldump.providers.claude_code import ClaudeCodeProvider, _parse_classification, _sanitize_name
 from pixeldump.providers.ollama import OllamaProvider
 
 # ---------------------------------------------------------------------------
@@ -345,3 +348,160 @@ def test_ollama_falls_back_to_available_model(mock_ollama_client: Any) -> None:
     provider = OllamaProvider(host="http://localhost:11434", model="gemma3")
     assert provider.is_available() is True
     assert provider.model == "llava"
+
+
+# ---------------------------------------------------------------------------
+# ClaudeCodeProvider
+# ---------------------------------------------------------------------------
+
+
+def test_claude_code_unavailable_when_cli_missing() -> None:
+    with patch("pixeldump.providers.claude_code.shutil.which", return_value=None):
+        provider = ClaudeCodeProvider()
+        assert provider.is_available() is False
+
+
+def test_claude_code_unavailable_when_version_fails() -> None:
+    with patch("pixeldump.providers.claude_code.shutil.which", return_value="/usr/bin/claude"):
+        with patch("pixeldump.providers.claude_code.subprocess.run") as mock_run:
+            mock_run.return_value = MagicMock(returncode=1)
+            provider = ClaudeCodeProvider()
+            assert provider.is_available() is False
+
+
+def test_claude_code_available_when_version_succeeds() -> None:
+    with patch("pixeldump.providers.claude_code.shutil.which", return_value="/usr/bin/claude"):
+        with patch("pixeldump.providers.claude_code.subprocess.run") as mock_run:
+            mock_run.return_value = MagicMock(returncode=0)
+            provider = ClaudeCodeProvider()
+            assert provider.is_available() is True
+
+
+def test_claude_code_caches_availability() -> None:
+    with patch("pixeldump.providers.claude_code.shutil.which", return_value="/usr/bin/claude"):
+        with patch("pixeldump.providers.claude_code.subprocess.run") as mock_run:
+            mock_run.return_value = MagicMock(returncode=0)
+            provider = ClaudeCodeProvider()
+            provider.is_available()
+            provider.is_available()
+            assert mock_run.call_count == 1
+
+
+def test_claude_code_call_raises_when_cli_none() -> None:
+    provider = ClaudeCodeProvider()
+    provider._cli = None  # noqa: SLF001
+    with pytest.raises(RuntimeError):
+        provider._call("sys", "user")  # noqa: SLF001
+
+
+def test_claude_code_parse_classification_valid() -> None:
+    payload = (
+        '{"category": "travel", "subcategory": "international", '
+        '"confidence": 0.85, "description": "trip abroad", "notable": ["beach"]}'
+    )
+    result = _parse_classification(payload)
+    assert isinstance(result, Classification)
+    assert result.category == "travel"
+    assert result.subcategory == "international"
+    assert result.confidence == 0.85
+    assert result.notable == ["beach"]
+
+
+def test_claude_code_parse_classification_empty() -> None:
+    result = _parse_classification("")
+    assert result.category == "uncategorized"
+    assert result.confidence == 0.0
+
+
+def test_claude_code_parse_classification_invalid_json() -> None:
+    result = _parse_classification("not json at all lol }{")
+    assert result.category == "uncategorized"
+
+
+def test_claude_code_sanitize_name_basic() -> None:
+    assert _sanitize_name("Ate Good In Tokyo!!", "fallback") == "ate_good_in_tokyo"
+
+
+def test_claude_code_sanitize_name_empty_returns_fallback() -> None:
+    assert _sanitize_name("", "my_fallback") == "my_fallback"
+
+
+def test_claude_code_sanitize_name_clamps_to_40() -> None:
+    long_input = "a" * 60 + " extra words here"
+    result = _sanitize_name(long_input, "fallback")
+    assert len(result) <= 40
+
+
+# ---------------------------------------------------------------------------
+# build_cluster_metadata_context / _time_of_day
+# ---------------------------------------------------------------------------
+
+
+def _make_photo_input(
+    filename: str = "IMG_001.jpg",
+    gps: GPSCoord | None = None,
+    camera_model: str | None = "iPhone 15",
+    date_taken: datetime | None = datetime(2024, 6, 15, 14, 30, 0),
+) -> PhotoInput:
+    meta = PhotoMetadata(
+        path=Path(f"/tmp/{filename}"),
+        date_taken=date_taken,
+        gps=gps,
+        camera_model=camera_model,
+        width=4032,
+        height=3024,
+        file_size=2_000_000,
+    )
+    return PhotoInput(metadata=meta, thumbnail_bytes=b"\xff\xd8\xff\xd9")
+
+
+def test_metadata_context_empty_list_returns_empty_string() -> None:
+    assert build_cluster_metadata_context([]) == ""
+
+
+def test_metadata_context_includes_filename() -> None:
+    photo = _make_photo_input(filename="IMG_9999.jpg")
+    result = build_cluster_metadata_context([photo])
+    assert "IMG_9999.jpg" in result
+
+
+def test_metadata_context_includes_gps() -> None:
+    photo = _make_photo_input(gps=GPSCoord(35.6762, 139.6503))
+    result = build_cluster_metadata_context([photo])
+    assert "35.67620" in result
+    assert "139.65030" in result
+
+
+def test_metadata_context_no_gps_says_none() -> None:
+    photo = _make_photo_input(gps=None)
+    result = build_cluster_metadata_context([photo])
+    assert "none" in result.lower()
+
+
+def test_metadata_context_includes_camera_model() -> None:
+    photo = _make_photo_input(camera_model="iPhone 15 Pro")
+    result = build_cluster_metadata_context([photo])
+    assert "iPhone 15 Pro" in result
+
+
+def test_metadata_context_cluster_summary_centroid() -> None:
+    p1 = _make_photo_input(gps=GPSCoord(35.6762, 139.6503))
+    p2 = _make_photo_input(gps=GPSCoord(35.6800, 139.6600))
+    result = build_cluster_metadata_context([p1, p2])
+    assert "location centroid" in result
+
+
+def test_time_of_day_early_morning() -> None:
+    assert _time_of_day(6) == "early morning"
+
+
+def test_time_of_day_evening() -> None:
+    assert _time_of_day(19) == "evening"
+
+
+def test_time_of_day_night() -> None:
+    assert _time_of_day(23) == "night"
+
+
+def test_time_of_day_morning() -> None:
+    assert _time_of_day(10) == "morning"
