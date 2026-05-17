@@ -20,6 +20,7 @@ class NamingMode(str, Enum):
 class ProviderName(str, Enum):
     CLAUDE = "claude"
     OLLAMA = "ollama"
+    CLAUDE_CODE = "claude-code"
     AUTO = "auto"
 
 

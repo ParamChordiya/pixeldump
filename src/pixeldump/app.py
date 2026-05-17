@@ -199,7 +199,7 @@ class Pipeline:
             if cls_stat is None:
                 continue
             n_photos = len(cluster.photos)
-            if cls_stat.subcategory == "screenshot":
+            if cls_stat.subcategory and cls_stat.subcategory.startswith("screenshot"):
                 screenshots += n_photos
             if cls_stat.subcategory == "food":
                 food += n_photos

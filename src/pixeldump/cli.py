@@ -77,16 +77,25 @@ def _instantiate_provider(
 ) -> VisionProvider | None:
     """Instantiate a provider, returning None if unavailable."""
     from pixeldump.providers.claude import ClaudeProvider
+    from pixeldump.providers.claude_code import ClaudeCodeProvider
     from pixeldump.providers.ollama import OllamaProvider
 
+    if choice == "claude-code":
+        ccp = ClaudeCodeProvider()
+        return ccp if ccp.is_available() else None
+
     if choice == "auto":
-        # Try Claude first if API key present.
+        # 1. Claude Code (no extra key needed) — preferred when available.
+        ccp = ClaudeCodeProvider()
+        if ccp.is_available():
+            return ccp
+        # 2. Direct Claude API if key is configured.
         api_key = os.environ.get("ANTHROPIC_API_KEY") or config.get("claude_api_key")
         if api_key:
             cp = ClaudeProvider(api_key=api_key)
             if cp.is_available():
                 return cp
-        # Fall back to ollama.
+        # 3. Ollama as a last resort.
         op = OllamaProvider(
             host=config.get("ollama_host", "http://localhost:11434"),
             model=config.get("ollama_model", "gemma3"),
@@ -94,16 +103,19 @@ def _instantiate_provider(
         if op.is_available():
             return op
         return None
+
     if choice == "claude":
         api_key = os.environ.get("ANTHROPIC_API_KEY") or config.get("claude_api_key")
         cp = ClaudeProvider(api_key=api_key)
         return cp if cp.is_available() else None
+
     if choice == "ollama":
         op = OllamaProvider(
             host=config.get("ollama_host", "http://localhost:11434"),
             model=config.get("ollama_model", "gemma3"),
         )
         return op if op.is_available() else None
+
     return None
 
 
@@ -139,7 +151,7 @@ def main(ctx: click.Context) -> None:
 @click.option(
     "--provider",
     "provider_choice",
-    type=click.Choice(["claude", "ollama", "auto"]),
+    type=click.Choice(["claude", "ollama", "claude-code", "auto"]),
     default=None,
 )
 @click.option(
@@ -401,13 +413,25 @@ def config(reset: bool) -> None:
 def setup() -> None:
     """Re-run the provider setup wizard."""
     from pixeldump.providers.claude import ClaudeProvider
+    from pixeldump.providers.claude_code import ClaudeCodeProvider
     from pixeldump.providers.ollama import OllamaProvider
 
     cfg = load_config()
+
+    # Show claude-code status upfront so users know if they already have it.
+    ccp = ClaudeCodeProvider()
+    if ccp.is_available():
+        click.echo("claude-code: detected — no setup needed. ✓")
+    else:
+        click.echo(
+            "claude-code: not found. install Claude Code (https://claude.ai/code) "
+            "to use this provider without an API key."
+        )
+
     choice = click.prompt(
-        "which provider? (claude/ollama/both)",
-        type=click.Choice(["claude", "ollama", "both"]),
-        default="both",
+        "which provider to configure?",
+        type=click.Choice(["claude", "ollama", "both", "skip"]),
+        default="skip" if ccp.is_available() else "both",
     )
 
     if choice in {"claude", "both"}:
