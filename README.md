@@ -27,7 +27,7 @@
 - 🧠 **Vision-LLM classification** — Claude API or local Ollama (Gemma 3 / LLaVA)
 - 💀 **Catches duplicates** — exact (SHA-256) and near-duplicate (perceptual hash)
 - 🏷️ **Three naming vibes** — corporate, chaotic, or unhinged (your call)
-- 📂 **Year/month folder layout** — `2024/2024_03_event_name/`
+- 📂 **Granular document routing** — screenshots, bills, boarding passes, prescriptions, and more each land in their own typed folder automatically
 - ↩️ **Undo support** — every move is logged in a manifest, fully reversible
 - 🛟 **Dry-run by default** — preview before anything moves
 - 🔁 **Resumable** — interrupt a run, pick up where you left off
@@ -65,9 +65,9 @@ The vision model looks at the photos and writes the folder name based on what it
 
 | Mode | Example output |
 |---|---|
-| `--mode corporate` 🏢 | `2024_03_japan_trip` · `2024_06_sarah_birthday` · `2024_07_office_holiday_party` |
-| `--mode chaotic` 🔥 | `2024_03_ate_good_in_tokyo` · `2024_06_main_character_moment` · `2024_07_the_old_people_gathered` |
-| `--mode unhinged` 🫠 | `2024_03_proof_i_went_outside_once` · `2024_06_emotional_support_sunset` · `2024_07_what_the_dog_doin` |
+| `--mode corporate` 🏢 | `2024_03_tokyo_client_summit` · `2024_06_sarah_alex_wedding_tuscany` · `2024_07_team_offsite_q2_2024` |
+| `--mode chaotic` 🔥 | `2024_03_ate_in_tokyo_fr` · `2024_06_main_character_bali_era` · `2024_07_family_chaos_thanksgiving` |
+| `--mode unhinged` 🫠 | `2024_03_proof_i_touched_grass` · `2024_06_the_yassification_of_brunch` · `2024_07_my_villain_era_in_milan` |
 
 ## 🧠 provider setup
 
@@ -97,22 +97,40 @@ After a run, your photo directory looks like this:
 ```
 Photos/
 ├── 2024/
-│   ├── 2024_03_ate_good_in_tokyo/
+│   ├── 2024_03_ate_good_in_tokyo/      # events get LLM-named folders
 │   ├── 2024_06_birthday_party/
 │   ├── 2024_07_proof_i_had_friends/
-│   ├── 2024_misc/
-│   └── 2024_screenshots/
+│   │
+│   ├── screenshots/                    # generic screen captures
+│   ├── screenshots_apps/               # app UI captures
+│   ├── screenshots_conversations/      # DM / text thread screenshots
+│   ├── screenshots_social/             # posts, reels, stories saved as screenshots
+│   ├── screenshots_memes/              # meme hoarding, no judgement
+│   ├── screenshots_web/                # browser / webpage captures
+│   ├── screenshots_maps/               # maps and directions
+│   │
+│   ├── documents_receipts/             # store and restaurant receipts
+│   ├── documents_bills/                # utility bills and invoices
+│   ├── documents_financial/            # bank statements, credit cards, tax docs, paychecks
+│   ├── documents_ids/                  # ID cards, passports, licences, insurance cards, visas
+│   ├── documents_travel/               # boarding passes, hotel confirmations, event tickets
+│   ├── documents_medical/              # prescriptions, lab results, vaccine records
+│   ├── documents_legal/                # contracts, leases, certificates
+│   └── documents_misc/                 # menus, business cards, whiteboards, QR codes, forms
+│
 ├── 2023/
 │   └── ...
 ├── _review/
-│   ├── duplicates/        # near-identical shots, kept the highest-res one
+│   ├── duplicates/        # near-identical shots — highest-res copy kept
 │   ├── no_date/           # photos with no EXIF date
-│   └── low_confidence/    # photos the AI wasn't sure about
+│   └── low_confidence/    # photos the AI wasn't sure about (confidence < 0.5)
 └── .pixeldump/
     ├── manifests/         # one JSON per run, used for undo
     ├── runs/              # per-run logs
     └── thumbnails/        # cached thumbnails
 ```
+
+Documents are routed to their typed folder without LLM naming — every receipt lands in `documents_receipts/`, every boarding pass in `documents_travel/`, and so on. No creative folder names needed when the category is self-explanatory.
 
 ## 🧰 all flags
 
