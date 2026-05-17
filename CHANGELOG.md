@@ -4,7 +4,7 @@ All notable changes to PixelDump will be documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [0.1.1] - 2026-05-16
+## [0.1.2] - 2026-05-16
 
 ### Added
 - Claude Code provider (local `claude` CLI, no API key required)
