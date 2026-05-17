@@ -134,7 +134,7 @@ class OllamaProvider(VisionProvider):
         sampled = photos[:_PHOTOS_PER_CLUSTER]
         images = [photo.thumbnail_bytes for photo in sampled]
         metadata_ctx = build_cluster_metadata_context(sampled)
-        messages = [
+        messages: list[Any] = [
             {"role": "system", "content": CLASSIFY_SYSTEM_PROMPT},
             {
                 "role": "user",
